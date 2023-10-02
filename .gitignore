@@ -31,3 +31,8 @@
 *.out
 *.app
 build/
+CMakeFiles/
+*.cmake
+*Makefile*
+*CMakeCache.txt*
+.cache/
