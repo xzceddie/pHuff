@@ -71,15 +71,15 @@ private:
         if( m_FoundSyms.size() == 1 )
             return true;
         
-        std::cout << "Building... \n";
-        for(auto& ele: m_FoundSyms)
-        {
-            std::cout << "count: " << ele.m_Cnt << ", symbols: ";
-            for(auto& sym: ele.m_Sym)
-                std::cout << (int)sym <<" ";
-            std::cout << std::endl;
-        }
-        std::cout << std::endl;
+        // std::cout << "Building... \n";
+        // for(auto& ele: m_FoundSyms)
+        // {
+        //     std::cout << "count: " << ele.m_Cnt << ", symbols: ";
+        //     for(auto& sym: ele.m_Sym)
+        //         std::cout << (int)sym <<" ";
+        //     std::cout << std::endl;
+        // }
+        // std::cout << std::endl;
 
         std::pop_heap( m_FoundSyms.begin(), m_FoundSyms.end(), FreqLess{} );
         std::pop_heap( m_FoundSyms.begin(), m_FoundSyms.end() - 1, FreqLess{} );
@@ -89,23 +89,21 @@ private:
         
         for( const symbols& ele: sec_min.m_Sym )
         {
-            // std::cout << "SEC_MIN: " << (int)ele << " ";
             m_Codes.at( (int)ele ).push_back( 1 );
-            std::cout << "Code at: [" << (int)ele << "]: ";
-            for(auto ele_ele: m_Codes.at((int)ele))
-                std::cout << (int)ele_ele << " ";
-            std::cout << std::endl;
+            // std::cout << "Code at: [" << (int)ele << "]: ";
+            // for(auto ele_ele: m_Codes.at((int)ele))
+            //     std::cout << (int)ele_ele << " ";
+            // std::cout << std::endl;
         }
         for( const symbols& ele: min.m_Sym )
         {
-            // std::cout << "MIN: " << (int)ele << " ";
             m_Codes.at( (int)ele ).push_back( 0 );
-            std::cout << "Code at [" << (int)ele << "]: ";
-            for(auto ele_ele: m_Codes.at((int)ele))
-                std::cout << (int)ele_ele << " ";
-            std::cout << std::endl;
+            // std::cout << "Code at [" << (int)ele << "]: ";
+            // for(auto ele_ele: m_Codes.at((int)ele))
+            //     std::cout << (int)ele_ele << " ";
+            // std::cout << std::endl;
         }
-        std::cout << std::endl;
+        // std::cout << std::endl;
 
         sec_min.Absorb( min );
 
@@ -203,6 +201,11 @@ public:
                 }
             }
         }
+    }
+
+    std::vector<std::vector<symbols>> getCodes() const
+    {
+        return m_Codes;
     }
     
 };
