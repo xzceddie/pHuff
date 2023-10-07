@@ -7,4 +7,6 @@ set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
 add_subdirectory( ./src/ )
 add_subdirectory( ./include/ )
+add_subdirectory( ./test/ )
+add_subdirectory( ./thirdparty/googletest/ )
 

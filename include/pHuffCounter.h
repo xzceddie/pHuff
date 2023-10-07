@@ -12,9 +12,9 @@
 #include <fstream>
 #include <array>
 #include <cstddef>
+#include <concepts>
 
 #define CNT_ALL_ASCII 256
-
 
 inline std::array<std::size_t, CNT_ALL_ASCII>
 count_occurance( const uint8_t* in_buf, std::size_t in_len )
@@ -30,9 +30,9 @@ count_occurance( const uint8_t* in_buf, std::size_t in_len )
 
 template< class T >
 concept Iterable = requires(T&& t) {
-  std::begin(std::forward<T>(t));
-  std::end  (std::forward<T>(t));
-  { sizeof( T::value_type ) == 1 };
+    std::begin(std::forward<T>(t));
+    std::end  (std::forward<T>(t));
+    { sizeof( typename T::value_type ) == 1 };
 };
 
 
