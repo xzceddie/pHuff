@@ -36,7 +36,7 @@ public:
         {
             const BYTE* this_ptr = src + len_each_seg * i;
             const size_t this_len = (i == ThreadSize ? src + inSize - this_ptr : len_each_seg );
-            tmp_threads[i] = std::thread( buildFreqTbl<AlphaBetaSize>, this_ptr, this_len, m_freqTbls[i]);
+            tmp_threads[i] = std::thread( pHuff::utils::buildFreqTbl<AlphaBetaSize>, this_ptr, this_len, m_freqTbls[i]);
         }
         
         for ( int i = 0; i < ThreadSize; ++i )

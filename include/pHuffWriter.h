@@ -1,8 +1,11 @@
+#ifndef P_HUFF_WRITER_H
+#define P_HUFF_WRITER_H
+
 #include <cstdio>
 #include <cstddef>
 #include <cstdint>
-
-
+#include <include/utils.h>
+#include <include/pHuffTreeBuilder.h>
 
 struct HuffSeg
 {
@@ -28,3 +31,9 @@ public:
     std::uint8_t getCurFilledLen() const { return m_currFilledLen; }
     BufferBasicInfo getBufferInfo() const { return m_buffInfo; }
 };
+
+
+
+
+
+#endif

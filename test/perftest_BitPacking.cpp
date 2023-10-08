@@ -33,22 +33,22 @@ static symbols TEST_OUT_BUF_AVX256_3[10000];
 
 TEST_F( TestBitPacking, PackSameResult1 )
 { 
-    auto res_len_naiive = pack_buf_naiive( TEST_BIN_ARRY_1, TEST_OUT_BUF_NAIIVE_1 );
-    auto res_len_avx_256 = pack_buf_naiive( TEST_BIN_ARRY_1, TEST_OUT_BUF_AVX256_1 );
+    auto res_len_naiive = pHuff::utils::pack_buf_naiive( TEST_BIN_ARRY_1, TEST_OUT_BUF_NAIIVE_1 );
+    auto res_len_avx_256 = pHuff::utils::pack_buf_naiive( TEST_BIN_ARRY_1, TEST_OUT_BUF_AVX256_1 );
     EXPECT_EQ( res_len_naiive, res_len_avx_256 );
     EXPECT_EQ( memcmp( TEST_OUT_BUF_NAIIVE_1, TEST_OUT_BUF_AVX256_1, res_len_naiive ), 0 );
 }
 TEST_F( TestBitPacking, PackSameResult2 )
 { 
-    auto res_len_naiive = pack_buf_naiive( TEST_BIN_ARRY_2, TEST_OUT_BUF_NAIIVE_2 );
-    auto res_len_avx_256 = pack_buf_naiive( TEST_BIN_ARRY_2, TEST_OUT_BUF_AVX256_2 );
+    auto res_len_naiive = pHuff::utils::pack_buf_naiive( TEST_BIN_ARRY_2, TEST_OUT_BUF_NAIIVE_2 );
+    auto res_len_avx_256 = pHuff::utils::pack_buf_naiive( TEST_BIN_ARRY_2, TEST_OUT_BUF_AVX256_2 );
     EXPECT_EQ( res_len_naiive, res_len_avx_256 );
     EXPECT_EQ( memcmp( TEST_OUT_BUF_NAIIVE_2, TEST_OUT_BUF_AVX256_2, res_len_naiive ), 0 );
 }
 TEST_F( TestBitPacking, PackSameResult3 )
 { 
-    auto res_len_naiive = pack_buf_naiive( TEST_BIN_ARRY_3, TEST_OUT_BUF_NAIIVE_3 );
-    auto res_len_avx_256 = pack_buf_naiive( TEST_BIN_ARRY_3, TEST_OUT_BUF_AVX256_3 );
+    auto res_len_naiive = pHuff::utils::pack_buf_naiive( TEST_BIN_ARRY_3, TEST_OUT_BUF_NAIIVE_3 );
+    auto res_len_avx_256 = pHuff::utils::pack_buf_naiive( TEST_BIN_ARRY_3, TEST_OUT_BUF_AVX256_3 );
     EXPECT_EQ( res_len_naiive, res_len_avx_256 );
     EXPECT_EQ( memcmp( TEST_OUT_BUF_NAIIVE_3, TEST_OUT_BUF_AVX256_3, res_len_naiive ), 0 );
 }
@@ -58,7 +58,7 @@ void bench_naiive_pack_1( benchmark::State& in_state )
 { 
     for( auto _: in_state )
     { 
-        pack_buf_naiive( TEST_BIN_ARRY_1, TEST_OUT_BUF_NAIIVE_1 );
+        pHuff::utils::pack_buf_naiive( TEST_BIN_ARRY_1, TEST_OUT_BUF_NAIIVE_1 );
     }
 }
 BENCHMARK( bench_naiive_pack_1 );
@@ -66,7 +66,7 @@ void bench_naiive_pack_2( benchmark::State& in_state )
 { 
     for( auto _: in_state )
     { 
-        pack_buf_naiive( TEST_BIN_ARRY_2, TEST_OUT_BUF_NAIIVE_2 );
+        pHuff::utils::pack_buf_naiive( TEST_BIN_ARRY_2, TEST_OUT_BUF_NAIIVE_2 );
     }
 }
 BENCHMARK( bench_naiive_pack_2 );
@@ -74,7 +74,7 @@ void bench_naiive_pack_3( benchmark::State& in_state )
 { 
     for( auto _: in_state )
     { 
-        pack_buf_naiive( TEST_BIN_ARRY_3, TEST_OUT_BUF_NAIIVE_3 );
+        pHuff::utils::pack_buf_naiive( TEST_BIN_ARRY_3, TEST_OUT_BUF_NAIIVE_3 );
     }
 }
 BENCHMARK( bench_naiive_pack_3 );
@@ -84,7 +84,7 @@ void bench_avx_256_pack_1( benchmark::State& in_state )
 { 
     for( auto _: in_state )
     { 
-        pack_buf_avx_256( TEST_BIN_ARRY_1, TEST_OUT_BUF_AVX256_1 );
+        pHuff::utils::pack_buf_avx_256( TEST_BIN_ARRY_1, TEST_OUT_BUF_AVX256_1 );
     }
 }
 BENCHMARK( bench_avx_256_pack_1 );
@@ -92,7 +92,7 @@ void bench_avx_256_pack_2( benchmark::State& in_state )
 { 
     for( auto _: in_state )
     { 
-        pack_buf_avx_256( TEST_BIN_ARRY_2, TEST_OUT_BUF_AVX256_2 );
+        pHuff::utils::pack_buf_avx_256( TEST_BIN_ARRY_2, TEST_OUT_BUF_AVX256_2 );
     }
 }
 BENCHMARK( bench_avx_256_pack_2 );
@@ -100,7 +100,7 @@ void bench_avx_256_pack_3( benchmark::State& in_state )
 { 
     for( auto _: in_state )
     { 
-        pack_buf_avx_256( TEST_BIN_ARRY_3, TEST_OUT_BUF_AVX256_3 );
+        pHuff::utils::pack_buf_avx_256( TEST_BIN_ARRY_3, TEST_OUT_BUF_AVX256_3 );
     }
 }
 BENCHMARK( bench_avx_256_pack_3 );

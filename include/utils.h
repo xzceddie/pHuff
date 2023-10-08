@@ -8,8 +8,9 @@
 #include <include/pHuffCounter.h>
 #include <immintrin.h>
 
-#define BYTE uint8_t
 typedef std::uint8_t symbols;
+namespace pHuff::utils {
+#define BYTE uint8_t
 
 template <size_t AlphaBetaSize, size_t ThreadSize>
 void binFreq( const std::array<const size_t[AlphaBetaSize], ThreadSize>& inFreqTbls,
@@ -97,6 +98,8 @@ std::size_t pack_buf_avx_256( const T& in_buf, symbols* out_buf )
     }
     return final_rounds;
 }
+
+}// namespace pHuff::utils
 
 
 
