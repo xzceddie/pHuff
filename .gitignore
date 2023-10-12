@@ -36,3 +36,5 @@ CMakeFiles/
 *Makefile*
 *CMakeCache.txt*
 .cache/
+*vscode/*
+*vscode

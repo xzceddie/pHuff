@@ -10,6 +10,7 @@
 #include <variant>
 #include <string_view>
 #include <include/pHuffCounter.h>
+#include <include/utils.h>
 #include <array>
 #include <cassert>
 
@@ -174,7 +175,7 @@ public:
         m_CodesReversed = true;
         return;
     }
-    
+
     /*
      * Meant for Debug: Always print correct codes no matter the value of m_CodesReversed
      **/
@@ -202,6 +203,40 @@ public:
             }
         }
     }
+
+    //
+
+    #pragma pack(1)
+    struct EncodedHeader
+    {
+        std::uint16_t m_CntCodes;
+        std::uint16_t m_CodeLength;
+    };
+    #pragma pack()
+
+    // very naiive serialization
+    std::size_t serialize_huff_codes(void * out_buf)
+    {
+        std::vector< symbols > concat_codes;
+        for( const auto & ele: getCodes() )
+        {
+            std::copy( ele.begin(), ele.end(), std::back_inserter( concat_codes ) );
+        }
+
+        const auto [ code_cnt, code_len] = [concat_codes, this](){
+            return getCodes().size(), concat_codes.size() % 8 ?  1 + (concat_codes.size()>>3) : concat_codes.size()>>3;
+        }();
+
+        EncodedHeader* out_ptr = static_cast<EncodedHeader*> (out_buf);
+        out_ptr->m_CntCodes = code_cnt;
+        out_ptr->m_CodeLength = code_len;
+
+        auto packed_size = pHuff::utils::pack_buf_avx_256(
+            concat_codes, static_cast<symbols*>(out_buf) + sizeof(EncodedHeader)
+        );
+        assertm(packed_size == code_len, "Oops! serialization of your Huffman code probably goes wrong\n");
+    }
+    
 
     std::vector<std::vector<symbols>> getCodes() const
     {

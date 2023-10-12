@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <include/pHuffCounter.h>
 #include <immintrin.h>
+#include <cassert>
 
 typedef std::uint8_t symbols;
 namespace pHuff::utils {
@@ -98,6 +99,8 @@ std::size_t pack_buf_avx_256( const T& in_buf, symbols* out_buf )
     }
     return final_rounds;
 }
+
+
 
 }// namespace pHuff::utils
 
