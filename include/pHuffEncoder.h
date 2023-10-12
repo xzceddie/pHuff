@@ -64,11 +64,8 @@ public:
         m_treeBuilder.build(eager);
     }
 
-    std::size_t encode( symbols* out_buf )
+    std::size_t encodeContent( symbols* out_buf )
     {
-        auto header_size = m_treeBuilder.serialize_huff_codes( out_buf );
-        out_buf += header_size;
-
         const auto& orig_buf = *m_origBuf;
         for( const auto sym: orig_buf )
         {
@@ -76,7 +73,14 @@ public:
             std::copy( this_code.begin(), this_code.end(), std::back_inserter( m_interByteCodes ) );
         }
 
-        const auto code_size = pHuff::utils::pack_buf_avx_256( m_interByteCodes, out_buf );
+        return pHuff::utils::pack_buf_avx_256( m_interByteCodes, out_buf );
+    }
+
+    std::size_t encode( symbols* out_buf )
+    {
+        auto header_size = m_treeBuilder.serialize_huff_codes( out_buf );
+        out_buf += header_size;
+        const auto code_size = encodeContent( out_buf );
         return header_size + code_size;
     }
     
