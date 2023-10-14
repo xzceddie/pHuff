@@ -19,6 +19,21 @@
 
 using symbols = std::uint8_t;
 
+#pragma pack(1)
+struct EncSegHeader
+{
+    std::uint16_t m_CntCodes;
+    std::uint16_t m_CodeLength;
+};
+template< std::size_t N_THREAD >
+struct MultiThreadHeaderStruct
+{
+    std::uint8_t n_thread = N_THREAD;
+    std::uint16_t encoded_header_size;
+    std::size_t encoded_body_sizes[N_THREAD];
+};
+#pragma pack()
+
 struct SymCnt
 {
 public:
@@ -63,6 +78,7 @@ private:
     std::vector< SymCnt > m_FoundSyms{}; // building this up, it will be maintained as a min heap
     std::vector< std::vector< symbols > > m_Codes{};
     bool m_CodesReversed{false};
+    bool m_Built{false};
 
     // false: build not finished
     // tree: build finished
@@ -149,6 +165,8 @@ public:
     {
         while( !__buildOneStep() )
         {}
+
+        m_Built = true;
         
         if( !eager )
         {
@@ -173,7 +191,6 @@ public:
             }
         );
         m_CodesReversed = true;
-        return;
     }
 
     /*
@@ -206,14 +223,6 @@ public:
 
     //
 
-    #pragma pack(1)
-    struct EncodedHeader
-    {
-        std::uint16_t m_CntCodes;
-        std::uint16_t m_CodeLength;
-    };
-    #pragma pack()
-
     // very naiive serialization
     std::size_t serialize_huff_codes(void * out_buf)
     {
@@ -224,17 +233,18 @@ public:
         }
 
         const auto [ code_cnt, code_len] = [concat_codes, this](){
-            return getCodes().size(), concat_codes.size() % 8 ?  1 + (concat_codes.size()>>3) : concat_codes.size()>>3;
+            return std::pair{getCodes().size(), concat_codes.size() % 8 ?  1 + (concat_codes.size()>>3) : concat_codes.size()>>3};
         }();
 
-        EncodedHeader* out_ptr = static_cast<EncodedHeader*> (out_buf);
+        EncSegHeader* out_ptr = static_cast<EncSegHeader*> (out_buf);
         out_ptr->m_CntCodes = code_cnt;
         out_ptr->m_CodeLength = code_len;
 
         auto packed_size = pHuff::utils::pack_buf_avx_256(
-            concat_codes, static_cast<symbols*>(out_buf) + sizeof(EncodedHeader)
+            concat_codes, static_cast<symbols*>(out_buf) + sizeof(EncSegHeader)
         );
         assertm(packed_size == code_len, "Oops! serialization of your Huffman code probably goes wrong\n");
+        return packed_size;
     }
     
 
