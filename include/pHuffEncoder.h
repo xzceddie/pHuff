@@ -17,8 +17,8 @@
 #include <cassert>
 #include <future>
 
-
 #define EXPECTED_INFLATE_RATIO_INTER_BUFFER 8
+// #define PERF
 
 
 template < Iterable T >
@@ -57,18 +57,59 @@ public:
         const auto& orig_buf = *m_origBuf;
         for( const auto sym: orig_buf )
         {
-            const auto& this_code = m_treeBuilder.getCodes().at( sym );
+            const auto& this_code = m_treeBuilder.getCodes().at( (int)sym );
             std::copy( this_code.begin(), this_code.end(), std::back_inserter( m_interByteCodes ) );
         }
+        // std::cout << "finished inter bytes endoding...\n";
+        // std::cout << "interbytes length: " << m_interByteCodes.size() << std::endl;
 
         return pHuff::utils::pack_buf_avx_256( m_interByteCodes, out_buf );
+    }
+
+    std::size_t encodeContentNew( symbols* out_buf )
+    {
+#ifdef PERF
+    auto startTime = std::chrono::high_resolution_clock::now();
+        std::memset( out_buf, 0, m_origBuf->size() );
+#endif
+
+        const auto& orig_buf = *m_origBuf;
+        symbols* curr_ptr = out_buf;
+        int curr_bits = 0;
+
+        for( std::size_t ind = 0; ind < orig_buf.size(); ++ind )
+        {
+            const symbols this_sym = orig_buf[ind];
+            const auto this_packed_code = m_treeBuilder.getPakedCodes().at( (int)this_sym );
+            auto cast_ptr = reinterpret_cast<std::uint64_t*>( curr_ptr );
+            auto& val = *cast_ptr;
+            val &= (this_packed_code >> curr_bits);
+
+            const std::size_t code_size = m_treeBuilder.getCodeLen( this_sym );
+
+            auto virtual_bits = curr_bits + code_size;
+            auto curr_bits = virtual_bits % 8;
+            curr_ptr += (virtual_bits >> 3);
+        }
+
+#ifdef PERF
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto dur = endTime - startTime;
+    std::cout << "core step used Time ( micro sec ) "
+              << std::chrono::duration_cast< std::chrono::microseconds>( dur ).count()
+              << std::endl;
+#endif
+        return curr_ptr - out_buf + ( curr_bits != 0 );
     }
 
     auto encode( symbols* out_buf )
     {
         const auto header_size = encodeHeader( out_buf );
         out_buf += header_size;
-        const auto code_size = encodeContent( out_buf );
+        // std::cout << "finished header encoding...\n";
+        // const auto code_size = encodeContent( out_buf );
+        const auto code_size = encodeContentNew( out_buf );
+        // std::cout << "finished content encoding...\n";
         return std::tuple{header_size, code_size, header_size + code_size};
     }
     
@@ -79,6 +120,7 @@ template < Iterable T >
 auto pHuffEncodeSegImp( const std::unique_ptr<pHuffSegEncoder<T>>& encoder, symbols* out_buf)
 {
     encoder->build(true);
+    // std::cout << "finished tree building...\n";
     return encoder->encode( out_buf );
 }
 
@@ -86,6 +128,7 @@ template < Iterable T >
 auto pHuffEncodeSeg( const T& in_buf, symbols* out_buf)
 {
     std::unique_ptr<pHuffSegEncoder<T>> encoder = std::make_unique<pHuffSegEncoder<T>> (in_buf);
+    // std::cout << "finished constructing pHuffSegEncoder...\n";
     return pHuffEncodeSegImp( encoder, out_buf );
 }
 

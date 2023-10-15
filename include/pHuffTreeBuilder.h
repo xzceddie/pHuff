@@ -71,12 +71,37 @@ struct FreqLess
 };
 
 
+static constexpr std::uint64_t CODE_PACK_MASK_64[64] = 
+{
+    0x8000000000000000, 0x4000000000000000, 0x2000000000000000, 0x1000000000000000,
+    0x0800000000000000, 0x0400000000000000, 0x0200000000000000, 0x0100000000000000,
+    0x0080000000000000, 0x0040000000000000, 0x0020000000000000, 0x0010000000000000,
+    0x0008000000000000, 0x0004000000000000, 0x0001ffffffffffff, 0x0001000000000000,
+    0x0000800000000000, 0x0000400000000000, 0x0000200000000000, 0x0000100000000000,
+    0x0000080000000000, 0x0000040000000000, 0x0000020000000000, 0x0000010000000000,
+    0x0000008000000000, 0x0000004000000000, 0x0000002000000000, 0x0000001000000000,
+    0x0000000800000000, 0x0000000400000000, 0x0000000200000000, 0x0000000100000000,
+    0x0000000080000000, 0x0000000040000000, 0x0000000020000000, 0x0000000010000000,
+    0x0000000008000000, 0x0000000004000000, 0x0000000002000000, 0x0000000001000000,
+    0x0000000000800000, 0x0000000000400000, 0x0000000000200000, 0x0000000000100000,
+    0x0000000000080000, 0x0000000000040000, 0x0000000000020000, 0x0000000000010000,
+    0x0000000000008000, 0x0000000000004000, 0x0000000000002000, 0x0000000000001000,
+    0x0000000000000800, 0x0000000000000400, 0x0000000000000200, 0x0000000000000100,
+    0x0000000000000080, 0x0000000000000040, 0x0000000000000020, 0x0000000000000010,
+    0x0000000000000008, 0x0000000000000004, 0x0000000000000002, 0x0000000000000001,
+};
+
+
+
+
 template < Iterable T >
 struct TreeBuilder
 {
 private:
     std::vector< SymCnt > m_FoundSyms{}; // building this up, it will be maintained as a min heap
     std::vector< std::vector< symbols > > m_Codes{};
+    std::vector< std::uint64_t > m_PackedCodes{};
+    std::vector< std::uint64_t > m_CodeLens{};
     bool m_CodesReversed{false};
     bool m_Built{false};
 
@@ -88,16 +113,6 @@ private:
         if( m_FoundSyms.size() == 1 )
             return true;
         
-        // std::cout << "Building... \n";
-        // for(auto& ele: m_FoundSyms)
-        // {
-        //     std::cout << "count: " << ele.m_Cnt << ", symbols: ";
-        //     for(auto& sym: ele.m_Sym)
-        //         std::cout << (int)sym <<" ";
-        //     std::cout << std::endl;
-        // }
-        // std::cout << std::endl;
-
         std::pop_heap( m_FoundSyms.begin(), m_FoundSyms.end(), FreqLess{} );
         std::pop_heap( m_FoundSyms.begin(), m_FoundSyms.end() - 1, FreqLess{} );
 
@@ -107,20 +122,11 @@ private:
         for( const symbols& ele: sec_min.m_Sym )
         {
             m_Codes.at( (int)ele ).push_back( 1 );
-            // std::cout << "Code at: [" << (int)ele << "]: ";
-            // for(auto ele_ele: m_Codes.at((int)ele))
-            //     std::cout << (int)ele_ele << " ";
-            // std::cout << std::endl;
         }
         for( const symbols& ele: min.m_Sym )
         {
             m_Codes.at( (int)ele ).push_back( 0 );
-            // std::cout << "Code at [" << (int)ele << "]: ";
-            // for(auto ele_ele: m_Codes.at((int)ele))
-            //     std::cout << (int)ele_ele << " ";
-            // std::cout << std::endl;
         }
-        // std::cout << std::endl;
 
         sec_min.Absorb( min );
 
@@ -128,6 +134,22 @@ private:
         std::push_heap( m_FoundSyms.begin(), m_FoundSyms.end(), FreqLess{} );
 
         return false;
+    }
+
+    void __packCodes()
+    {
+        for (const auto& codes: m_Codes)
+        {
+            assert( codes.size() <= 64 );
+            std::uint64_t tmp_code{};
+            for( std::size_t ind = 0; ind < codes.size(); ++ind )
+            {
+                tmp_code &= ( codes[ ind ] * CODE_PACK_MASK_64[ ind ] );
+            }
+
+            m_PackedCodes.push_back( tmp_code );
+            m_CodeLens.push_back( codes.size() );
+        }
     }
 
 public:
@@ -167,6 +189,7 @@ public:
         {}
 
         m_Built = true;
+        __packCodes();
         
         if( !eager )
         {
@@ -248,11 +271,30 @@ public:
     }
     
 
-    std::vector<std::vector<symbols>> getCodes() const
+    const std::vector<std::vector<symbols>>& getCodes() const &
     {
         return m_Codes;
     }
     
+    std::vector<std::vector<symbols>>& getCodes() &
+    {
+        return m_Codes;
+    }
+
+    const std::vector<std::uint64_t>& getPakedCodes() const &
+    {
+        return m_PackedCodes;
+    }
+    
+    std::vector<std::uint64_t>& getPakedCodes() &
+    {
+        return m_PackedCodes;
+    }
+
+    std::size_t getCodeLen( const symbols in_sym ) const
+    {
+        return m_CodeLens.at( (std::size_t)in_sym );
+    }
 };
 
 #endif

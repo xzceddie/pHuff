@@ -92,7 +92,8 @@ std::size_t pack_buf_avx_256( const T& in_buf, symbols* out_buf )
 {
     std::uint32_t* out_buf_cpy = reinterpret_cast<std::uint32_t*>( out_buf );
     const auto rounds = preprocess<32, T>( in_buf ); // this is rounds in 4 bytes, not 1
-    const auto final_rounds = in_buf.size() % sizeof(symbols) ? in_buf.size() / sizeof(symbols) + 1 : in_buf.size() / sizeof(symbols);
+    const auto final_rounds = in_buf.size() % 8 ? in_buf.size() / 8 + 1 : in_buf.size() / 8;
+    
     for( std::size_t i = 0; i < rounds; ++i )
     {
         *out_buf_cpy++ = avs_256_pack_32_bytes( in_buf.data() + 32 * i );
