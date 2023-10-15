@@ -18,7 +18,7 @@
 #include <future>
 
 #define EXPECTED_INFLATE_RATIO_INTER_BUFFER 8
-// #define PERF
+#define PERF
 
 
 template < Iterable T >
@@ -70,26 +70,71 @@ public:
     {
 #ifdef PERF
     auto startTime = std::chrono::high_resolution_clock::now();
-        std::memset( out_buf, 0, m_origBuf->size() );
 #endif
 
+        std::memset( out_buf, 0, m_origBuf->size() );
         const auto& orig_buf = *m_origBuf;
         symbols* curr_ptr = out_buf;
         int curr_bits = 0;
 
-        for( std::size_t ind = 0; ind < orig_buf.size(); ++ind )
+        // for( std::size_t ind = 0; ind < orig_buf.size(); ++ind )
+        for( std::size_t ind = 0; ind < 10; ++ind )
         {
             const symbols this_sym = orig_buf[ind];
-            const auto this_packed_code = m_treeBuilder.getPakedCodes().at( (int)this_sym );
-            auto cast_ptr = reinterpret_cast<std::uint64_t*>( curr_ptr );
-            auto& val = *cast_ptr;
-            val &= (this_packed_code >> curr_bits);
+            const auto this_packed_code = m_treeBuilder.getPakedCodes( this_sym );
+            auto& val = *reinterpret_cast<std::uint64_t*>( curr_ptr );
+            val |= (this_packed_code >> curr_bits);
+            // *(curr_ptr) |= this_packed_code >> (curr_bits + 56);
+            // *( reinterpret_cast<std::uint64_t*>(curr_ptr + 1) ) = this_packed_code << curr_bits;
 
-            const std::size_t code_size = m_treeBuilder.getCodeLen( this_sym );
+            const std::uint8_t code_size = m_treeBuilder.getCodeLen( this_sym );
+            std::cout << "this_code_size: " << (int)code_size << std::endl;
 
             auto virtual_bits = curr_bits + code_size;
-            auto curr_bits = virtual_bits % 8;
+            auto curr_bits = ( virtual_bits & 7 );
             curr_ptr += (virtual_bits >> 3);
+        }
+
+#ifdef PERF
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto dur = endTime - startTime;
+    std::cout << "core step used Time ( micro sec ) "
+              << std::chrono::duration_cast< std::chrono::microseconds>( dur ).count()
+              << std::endl;
+#endif
+        return curr_ptr - out_buf + ( curr_bits != 0 );
+    }
+
+    std::size_t encodeContentOpt( symbols* out_buf )
+    {
+#ifdef PERF
+    auto startTime = std::chrono::high_resolution_clock::now();
+#endif
+
+        std::memset( out_buf, 0, m_origBuf->size() );
+        const auto& orig_buf = *m_origBuf;
+        symbols* curr_ptr = out_buf;
+        int curr_bits = 0;
+
+        std::size_t ind = 0;
+        while ( ind < orig_buf.size() - 1 )
+        {
+            const symbols this_sym = orig_buf[ind];
+            const symbols next_sym = orig_buf[ind + 1];
+            const auto this_packed_code = m_treeBuilder.getPakedCodesExt( this_sym, next_sym );
+            const auto this_code_size = m_treeBuilder.getCodeLenExt( this_sym, next_sym );
+
+            // auto& val = *reinterpret_cast<std::uint64_t*>( curr_ptr );
+            // val |= this_packed_code >> curr_bits;
+
+            *(curr_ptr) |= this_packed_code >> (curr_bits + 56);
+            *( reinterpret_cast<std::uint64_t*>(curr_ptr + 1) ) = this_packed_code << curr_bits;
+
+            auto virtual_bits = curr_bits + this_code_size;
+            auto curr_bits = ( virtual_bits & 7 );
+            curr_ptr += (virtual_bits >> 3);
+
+            ind += 2;
         }
 
 #ifdef PERF
@@ -108,8 +153,9 @@ public:
         out_buf += header_size;
         // std::cout << "finished header encoding...\n";
         // const auto code_size = encodeContent( out_buf );
-        const auto code_size = encodeContentNew( out_buf );
-        // std::cout << "finished content encoding...\n";
+        // const auto code_size = encodeContentNew( out_buf );
+        const auto code_size = encodeContentOpt( out_buf );
+        // std::cout << "finished content encoding, code_size: " << code_size << "\n";
         return std::tuple{header_size, code_size, header_size + code_size};
     }
     

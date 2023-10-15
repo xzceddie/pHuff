@@ -98,10 +98,14 @@ template < Iterable T >
 struct TreeBuilder
 {
 private:
+    std::uint64_t m_PackedCodesExt[CNT_ALL_ASCII][CNT_ALL_ASCII]{};
+    std::uint8_t m_CodeLensExt[CNT_ALL_ASCII][CNT_ALL_ASCII]{};
+
     std::vector< SymCnt > m_FoundSyms{}; // building this up, it will be maintained as a min heap
     std::vector< std::vector< symbols > > m_Codes{};
     std::vector< std::uint64_t > m_PackedCodes{};
-    std::vector< std::uint64_t > m_CodeLens{};
+    std::vector< std::uint8_t > m_CodeLens{};
+
     bool m_CodesReversed{false};
     bool m_Built{false};
 
@@ -152,6 +156,19 @@ private:
         }
     }
 
+    void __buildExtendedCodes()
+    {
+        for( int first_sym = 0; first_sym < CNT_ALL_ASCII; ++first_sym )
+        {
+            for( int second_sym = 0; second_sym < CNT_ALL_ASCII; ++second_sym )
+            {
+                auto& code = m_PackedCodesExt[ first_sym ][ second_sym ] ;
+                code = m_PackedCodes[ first_sym ] + ( m_PackedCodes[ second_sym ] >> m_CodeLens[ first_sym ] );
+                m_CodeLensExt[ first_sym ][ second_sym ] = m_CodeLens[ first_sym ] + m_CodeLens[ second_sym ];
+            }
+        }
+    }
+
 public:
     TreeBuilder()
         :m_Codes( CNT_ALL_ASCII )
@@ -190,6 +207,7 @@ public:
 
         m_Built = true;
         __packCodes();
+        __buildExtendedCodes();
         
         if( !eager )
         {
@@ -291,9 +309,24 @@ public:
         return m_PackedCodes;
     }
 
-    std::size_t getCodeLen( const symbols in_sym ) const
+    std::uint64_t getPakedCodes( const int sym ) const
     {
-        return m_CodeLens.at( (std::size_t)in_sym );
+        return m_PackedCodes[ sym ];
+    }
+
+    std::uint8_t getCodeLen( const int in_sym ) const
+    {
+        return m_CodeLens[ in_sym ];
+    }
+
+    std::uint64_t getPakedCodesExt( const int first_sym, const int second_sym ) const
+    {
+        return m_PackedCodesExt[ first_sym ][ second_sym ];
+    }
+
+    std::uint8_t getCodeLenExt( const int first_sym, const int second_sym ) const
+    {
+        return m_CodeLensExt[ first_sym ][ second_sym ];
     }
 };
 
