@@ -116,16 +116,18 @@ public:
         std::memset( out_buf, 0, m_origBuf->size() );
         const auto& orig_buf = *m_origBuf;
         symbols* curr_ptr = out_buf;
-        int curr_bits = 0;
+
+        symbols this_sym{}, next_sym{}, this_code_size{};
+        int curr_bits{}, virtual_bits{};
+        std::uint64_t this_packed_code{};
 
         std::size_t ind = 0;
-        int virtual_bits;
         while ( ind < orig_buf.size() - 1 )
         {
-            const symbols this_sym = orig_buf[ind];
-            const symbols next_sym = orig_buf[ind + 1];
-            const auto this_packed_code = m_treeBuilder.getPakedCodesExt( this_sym, next_sym );
-            const auto this_code_size = m_treeBuilder.getCodeLenExt( this_sym, next_sym );
+            this_sym = orig_buf[ind];
+            next_sym = orig_buf[ind + 1];
+            this_packed_code = m_treeBuilder.getPakedCodesExt( this_sym, next_sym );
+            this_code_size = m_treeBuilder.getCodeLenExt( this_sym, next_sym );
 
             // auto& val = *reinterpret_cast<std::uint64_t*>( curr_ptr );
             // val |= this_packed_code >> curr_bits;
@@ -138,6 +140,20 @@ public:
             curr_ptr += (virtual_bits >> 3);
 
             ind += 2;
+        }
+
+        if( ind == orig_buf.size() - 1 )
+        {
+            this_sym = orig_buf[ind];
+            this_packed_code = m_treeBuilder.getPakedCodes( this_sym );
+            auto& val = *reinterpret_cast<std::uint64_t*>( curr_ptr );
+            val |= (this_packed_code >> curr_bits);
+
+            this_code_size = m_treeBuilder.getCodeLen( this_sym );
+
+            virtual_bits = curr_bits + this_code_size;
+            curr_bits = ( virtual_bits & 7 );
+            curr_ptr += (virtual_bits >> 3);
         }
 
 #ifdef PERF
