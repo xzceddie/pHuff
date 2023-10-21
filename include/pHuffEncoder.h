@@ -78,7 +78,6 @@ public:
         int curr_bits = 0;
 
         for( std::size_t ind = 0; ind < orig_buf.size(); ++ind )
-        // for( std::size_t ind = 0; ind < 20; ++ind )
         {
             const symbols this_sym = orig_buf[ind];
             const auto this_packed_code = m_treeBuilder.getPakedCodes( this_sym );
@@ -91,10 +90,8 @@ public:
             // std::cout << "this_code_size: " << (int)code_size << std::endl;
 
             auto virtual_bits = curr_bits + code_size;
-            // std::cout << "virtual_bits: " << (int)virtual_bits << std::endl;
             curr_bits = ( virtual_bits % 8 );
             curr_ptr += (virtual_bits >> 3);
-            // std::cout << "encoded len: " << curr_ptr - out_buf + ( curr_bits != 0 ) << std::endl;
         }
 
 #ifdef PERF

@@ -22,8 +22,9 @@ using symbols = std::uint8_t;
 #pragma pack(1)
 struct EncSegHeader
 {
-    std::uint16_t m_CntCodes;
-    std::uint16_t m_CodeLength;
+    // std::uint16_t m_CntCodes;
+    // std::uint16_t m_CodeLength;
+    std::uint8_t m_CodeLens[CNT_ALL_ASCII];
 };
 template< std::size_t N_THREAD >
 struct MultiThreadHeaderStruct
@@ -273,13 +274,17 @@ public:
             std::copy( ele.begin(), ele.end(), std::back_inserter( concat_codes ) );
         }
 
+
         const auto [ code_cnt, code_len] = [concat_codes, this](){
-            return std::pair{getCodes().size(), concat_codes.size() % 8 ?  1 + (concat_codes.size()>>3) : concat_codes.size()>>3};
+            return std::pair{getCodes().size(),
+                             concat_codes.size() % 8 ?
+                                1 + (concat_codes.size()>>3) : concat_codes.size()>>3};
         }();
 
         EncSegHeader* out_ptr = static_cast<EncSegHeader*> (out_buf);
-        out_ptr->m_CntCodes = code_cnt;
-        out_ptr->m_CodeLength = code_len;
+        // out_ptr->m_CntCodes = code_cnt;
+        // out_ptr->m_CodeLength = code_len;
+        std::copy( m_CodeLens.begin(), m_CodeLens.end(), std::begin(out_ptr->m_CodeLens) );
 
         auto packed_size = pHuff::utils::pack_buf_avx_256(
             concat_codes, static_cast<symbols*>(out_buf) + sizeof(EncSegHeader)

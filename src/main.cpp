@@ -1,10 +1,12 @@
 #include <iostream>
 #include <sys/wait.h>
 #include <include/pHuffEncoder.h>
+#include <include/pHuffDecoder.h>
 #include <vector>
 #include <fstream>
 #include <chrono>
 
+#define LUT_LEN 10
 
 int main( int argc, const char** argv )
 {
