@@ -113,7 +113,8 @@ public:
     auto startTime = std::chrono::high_resolution_clock::now();
 #endif
 
-        std::memset( out_buf, 0, m_origBuf->size() );
+        // -> This is really not needed if we opt for choice 2 of filling the codes
+        // std::memset( out_buf, 0, m_origBuf->size() );
         const auto& orig_buf = *m_origBuf;
         symbols* curr_ptr = out_buf;
 
